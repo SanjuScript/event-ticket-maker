@@ -21,30 +21,41 @@ class PremiumTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.black87, fontSize: 16, fontFamily: "Quicksanju"),
+      style: const TextStyle(
+        color: Colors.black87,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'Quicksand',
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontFamily: "Quicksand",fontWeight: FontWeight.bold),
-        prefixIcon: Icon(icon, color: Colors.deepOrangeAccent),
+        labelStyle: const TextStyle(
+          color: Colors.blueGrey,
+          fontFamily: "Quicksand",
+          fontWeight: FontWeight.w600,
+        ),
+        prefixIcon: Icon(icon, color:  Color(0xFF0052D4)),
+
         prefixText: prefixText,
         prefixStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 16,
-          fontFamily: "Quicksanju"
+          fontFamily: "Quicksand",
+          fontWeight: FontWeight.w600,
         ),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Colors.white,  
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: Colors.blueGrey.shade200, width: 1.4),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.deepOrangeAccent, width: 1.6),
+          borderSide: const BorderSide(color: Color(0xFF4A90E2), width: 1.8),
         ),
       ),
     );

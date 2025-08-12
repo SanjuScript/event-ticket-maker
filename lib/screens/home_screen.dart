@@ -7,10 +7,10 @@ import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/success_screen.dart';
 import 'package:event_ticket_maker/services/storage_services.dart';
-import 'package:event_ticket_maker/widgets/footer.dart';
 import 'package:event_ticket_maker/widgets/glass_fields.dart';
 import 'package:event_ticket_maker/widgets/loading_widget.dart';
-import 'package:event_ticket_maker/widgets/qr_reminder.dart';
+import 'package:event_ticket_maker/widgets/payment_button.dart';
+import 'package:event_ticket_maker/widgets/premium_image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -136,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = jsonDecode(backendResponse.body);
 
     if (result['status'] == 'success') {
+      paymentProvider.setPayment(true);
       final ticketId = result['ticket_id'];
       String? imageUrl;
       if (kIsWeb && imageProvider.webImage != null) {
@@ -230,6 +231,13 @@ class _HomeScreenState extends State<HomeScreen> {
     };
   }
 
+  final _textStyle = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+    fontFamily: "newbo",
+    fontStyle: FontStyle.italic,
+  );
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   @override
@@ -242,234 +250,197 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, paymentProvider, _) {
           return Stack(
             children: [
-              Positioned.fill(
-                child: Image.network(
-                  'https://cdn.dribbble.com/userupload/9637157/file/original-67f4815f35a54c02a49213d55e7f019b.jpg?resize=800x0',
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                ),
-              ),
-
-              Positioned.fill(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-
-                      colors: [
-                        Color.fromARGB(115, 253, 251, 251),
-                        Color(0xFFE2D1C3),
-                      ],
-                    ),
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF2c6cbc),
+                      Color(0xFF71c3f7),
+                      Color(0xFFf6f6f6),
+                    ],
                   ),
-
-                  // color: Colors.black.withValues(alpha: .1),
                 ),
-              ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
 
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-
-                  return SafeArea(
-                    child: Center(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(
-                          24,
-                          30,
-                          24,
-                          viewInsets + 30,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(25),
-                          child: Card(
-                            elevation: 12,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Onam Celebration 2025',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
+                    return SafeArea(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.fromLTRB(
+                            24,
+                            30,
+                            24,
+                            viewInsets + 30,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(25),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Card(
+                                shadowColor: Colors.transparent,
+                                surfaceTintColor: Colors.transparent,
+                                elevation: 12,
+                                borderOnForeground: true,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                    color: Colors.white54,
+                                    width: 2,
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Date: Aug 28, 2025\nVenue: Krupanidhi college\nTicket: ₹705 per person',
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 14,
-                                      fontFamily: 'Quicksanju',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 28),
-
-                                  const Text(
-                                    'Book Your Ticket',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                      fontFamily: "Quicksanju",
-                                      letterSpacing: 0,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  PremiumTextField(
-                                    controller: nameController,
-                                    label: 'Full Name',
-                                    icon: Icons.person,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  PremiumTextField(
-                                    controller: phoneController,
-                                    label: 'Phone Number',
-                                    icon: Icons.phone,
-                                    keyboardType: TextInputType.phone,
-                                    prefixText: '+91 ',
-                                  ),
-
-                                  const SizedBox(height: 24),
-                                  Consumer<ImageUploadProvider>(
-                                    builder: (context, userProvider, _) {
-                                      final bool imageSelected = kIsWeb
-                                          ? userProvider.webImage != null
-                                          : userProvider.selectedImageFile !=
-                                                null;
-
-                                      return Column(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                color: Colors.white12,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Onam Celebration 2025',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Join us for a day of culture, tradition, and joy!',
+                                        style: _textStyle,
+                                      ),
+                                      Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
-                                            "Upload Your College ID Card",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
+                                          Icon(
+                                            Icons.calendar_today_rounded,
+                                            size: 18,
+                                            color: Colors.white,
                                           ),
-                                          const SizedBox(height: 8),
-
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                imageSelected
-                                                    ? Icons.check_circle
-                                                    : Icons.warning,
-                                                color: imageSelected
-                                                    ? Colors.green
-                                                    : Colors.red,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              SizedBox(
-                                                width:
-                                                    MediaQuery.sizeOf(
-                                                      context,
-                                                    ).width *
-                                                    .60,
-                                                height: 20,
-                                                child: Text(
-                                                  imageSelected
-                                                      ? kIsWeb
-                                                            ? userProvider
-                                                                      .webFileName ??
-                                                                  'web_image.jpg'
-                                                            : userProvider
-                                                                      .selectedImageFile
-                                                                      ?.path
-                                                                      .split(
-                                                                        '/',
-                                                                      )
-                                                                      .last ??
-                                                                  ''
-                                                      : "No image selected",
-                                                  maxLines: 1,
-                                                  style: TextStyle(
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    fontSize: 16,
-                                                    color: imageSelected
-                                                        ? Colors.green
-                                                        : Colors.black87,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                          const SizedBox(height: 12),
-
-                                          ElevatedButton.icon(
-                                            onPressed: () =>
-                                                userProvider.pickImage(context),
-                                            icon: const Icon(Icons.upload_file),
-                                            label: Text(
-                                              imageSelected
-                                                  ? "Change Image"
-                                                  : "Select Image",
-                                            ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Thursday, 28 August 2025',
+                                            style: _textStyle,
                                           ),
                                         ],
-                                      );
-                                    },
-                                  ),
-
-                                  const SizedBox(height: 24),
-
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            Colors.deepOrangeAccent,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(
+                                            Icons.location_on_rounded,
+                                            size: 18,
+                                            color: Colors.white,
                                           ),
-                                        ),
-                                        elevation: 4,
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Krupanidhi College, Bengaluru',
+                                            style: _textStyle,
+                                          ),
+                                        ],
                                       ),
-                                      onPressed: startPayment,
-                                      child: const Text(
-                                        'Proceed to Payment (₹705)',
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(
+                                            Icons.confirmation_num_rounded,
+                                            size: 18,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '₹705 per person',
+                                            style: _textStyle,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+
+                                      const Text(
+                                        'Book Your Ticket',
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 22,
                                           fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                          fontFamily: "newbo",
+                                          letterSpacing: 0,
                                         ),
                                       ),
-                                    ),
+                                      const SizedBox(height: 16),
+
+                                      PremiumTextField(
+                                        controller: nameController,
+                                        label: 'Full Name',
+                                        icon: Icons.person,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      PremiumTextField(
+                                        controller: phoneController,
+                                        label: 'Phone Number',
+                                        icon: Icons.phone,
+                                        keyboardType: TextInputType.phone,
+                                        prefixText: '+91 ',
+                                      ),
+
+                                      const SizedBox(height: 24),
+                                      Consumer<ImageUploadProvider>(
+                                        builder: (context, userProvider, _) {
+                                          final bool imageSelected = kIsWeb
+                                              ? userProvider.webImage != null
+                                              : userProvider
+                                                        .selectedImageFile !=
+                                                    null;
+
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Upload Your College ID Card",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              PremiumImagePicker(
+                                                imageSelected: imageSelected,
+                                                userProvider: userProvider,
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+
+                                      const SizedBox(height: 24),
+
+                                      PaymentButton(onPressed: startPayment),
+                                    ],
                                   ),
-                                  // qrReminder(),
-                                ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-              // Positioned(bottom: 50, left: 24, right: 24, child: qrReminder()),
-
-              // showFooterWidget(),
-              LoadingWidget(isLoading: paymentProvider.isLoading),
+              if (paymentProvider.isLoading)
+                Positioned.fill(
+                  child: LoadingWidget(
+                    isLoading: true,
+                    isPaymentDone: paymentProvider.isPaymentDone,
+                  ),
+                ),
             ],
           );
         },

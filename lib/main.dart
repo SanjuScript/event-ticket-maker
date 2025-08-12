@@ -29,29 +29,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Event',
+      title: 'Onam Celebration Tickets',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        fontFamily: 'Quicksand', 
+        fontFamily: 'newbo', 
         textTheme: TextTheme(
           headlineSmall: TextStyle(
-            fontFamily: 'Quicksanju',
+            fontFamily: 'newbo',
             fontWeight: FontWeight.bold,
             letterSpacing: 0,
           ),
           headlineMedium: TextStyle(
-            fontFamily: 'Quicksanju',
+            fontFamily: 'newbo',
             fontWeight: FontWeight.bold,
             letterSpacing: 0,
           ),
           bodySmall: TextStyle(
-            fontFamily: 'Quicksand',
+            fontFamily: 'newboT',
             fontWeight: FontWeight.bold,
             letterSpacing: 0,
           ),
           bodyMedium: TextStyle(
-            fontFamily: 'Quicksand',
+            fontFamily: 'newboT',
             fontWeight: FontWeight.bold,
             letterSpacing: 0,
           ),

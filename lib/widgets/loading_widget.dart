@@ -2,25 +2,48 @@ import 'package:flutter/material.dart';
 
 class LoadingWidget extends StatelessWidget {
   final bool isLoading;
-  const LoadingWidget({super.key, this.isLoading = false});
+  final bool isPaymentDone;
+  const LoadingWidget({
+    super.key,
+    this.isLoading = false,
+    this.isPaymentDone = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (!isLoading) return const SizedBox();
 
     return Container(
-      color: Colors.black.withOpacity(0.6), // subtle blur background
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(
-              color: Colors.orangeAccent,
-              strokeWidth: 4,
+      alignment: Alignment.center,
+      child: Container(
+        color: Colors.black.withOpacity(0.4),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            _AnimatedLoadingText(),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.white, strokeWidth: 4),
+                SizedBox(height: 20),
+                _AnimatedLoadingText(isPaymentDone: isPaymentDone),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -28,7 +51,8 @@ class LoadingWidget extends StatelessWidget {
 }
 
 class _AnimatedLoadingText extends StatefulWidget {
-  const _AnimatedLoadingText();
+  final bool isPaymentDone;
+  const _AnimatedLoadingText({required this.isPaymentDone});
 
   @override
   State<_AnimatedLoadingText> createState() => _AnimatedLoadingTextState();
@@ -46,7 +70,7 @@ class _AnimatedLoadingTextState extends State<_AnimatedLoadingText>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _fadeInFadeOut = Tween<double>(begin: 0.2, end: 1.0).animate(_controller);
+    _fadeInFadeOut = Tween<double>(begin: 0.3, end: 1.0).animate(_controller);
   }
 
   @override
@@ -59,13 +83,13 @@ class _AnimatedLoadingTextState extends State<_AnimatedLoadingText>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeInFadeOut,
-      child: const Text(
-        'Please wait...',
+      child: Text(
+        widget.isPaymentDone ? "Loading Ticket...." : 'Processing Payment...',
         style: TextStyle(
           color: Colors.white,
           fontSize: 18,
-          letterSpacing: 1.2,
-          fontWeight: FontWeight.w500,
+          letterSpacing: 1.1,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

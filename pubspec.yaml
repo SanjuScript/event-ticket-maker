@@ -85,14 +85,12 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Quicksanju
+    - family: newbo
       fonts:
-        - asset: fonts/Quicksand_Bold.otf
-          weight: 700
-    - family: Quicksand
+        - asset: fonts/newbo.otf
+    - family: newboT
       fonts:
-        - asset: fonts/Quicksand_Book.otf
-          weight: 400
+        - asset: fonts/newboT.otf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
