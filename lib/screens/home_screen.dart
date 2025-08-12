@@ -6,7 +6,7 @@ import 'package:event_ticket_maker/helper/string_helper.dart';
 import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/success_screen.dart';
-import 'package:event_ticket_maker/services/post_services.dart';
+import 'package:event_ticket_maker/services/storage_services.dart';
 import 'package:event_ticket_maker/widgets/footer.dart';
 import 'package:event_ticket_maker/widgets/glass_fields.dart';
 import 'package:event_ticket_maker/widgets/loading_widget.dart';
@@ -53,20 +53,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return;
       }
-      if (imgProvider.selectedImageFile == null) {
-        StringHelper.showError("No image selected !", context);
+      if ((kIsWeb && imgProvider.webImage == null) ||
+          (!kIsWeb && imgProvider.selectedImageFile == null)) {
+        StringHelper.showError("No image selected!", context);
         paymentProvider.setLoading(false);
-
         return;
       }
 
       debugPrint("Proceeding to payment...");
 
       final response = await http.post(
-        Uri.parse('https://event-backend-fd1l.onrender.com/create-order'),
+        Uri.parse(
+          'https://us-central1-event-ticket-maker-8e724.cloudfunctions.net/api/create-order',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'amount': 700 * 100,
+          'amount': 705 * 100,
           'receipt': 'receipt_${DateTime.now().millisecondsSinceEpoch}',
         }),
       );
@@ -88,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
       openRazorpayCheckout(
         orderId: orderId,
         keyId: "rzp_test_lfbXLnyT9SLgph",
-        amount: 700 * 100,
+        amount: 705 * 100,
         name: name,
         phone: phone,
         onSuccess: (paymentId) =>
@@ -124,7 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
     paymentProvider.setLoading(true);
 
     final backendResponse = await http.post(
-      Uri.parse('https://event-backend-fd1l.onrender.com/verify-payment'),
+      Uri.parse(
+        'https://us-central1-event-ticket-maker-8e724.cloudfunctions.net/api/verify-payment',
+      ),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'payment_id': paymentId, 'name': name, 'phone': phone}),
     );
@@ -133,18 +137,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (result['status'] == 'success') {
       final ticketId = result['ticket_id'];
-
+      String? imageUrl;
       if (kIsWeb && imageProvider.webImage != null) {
-        await PostServices.uploadWebImage(
-          imageData: imageProvider.webImage!,
-          fileName: imageProvider.webFileName ?? 'college_id.jpg',
-          ticketId: ticketId,
+        imageUrl = await StorageService.uploadWebImage(
+          data: imageProvider.webImage!,
+          path:
+              'id_cards/$ticketId/${imageProvider.webFileName ?? 'id_card.jpg'}',
         );
       } else if (!kIsWeb && imageProvider.selectedImageFile != null) {
-        await PostServices.uploadMobileImage(
+        imageUrl = await StorageService.uploadImageFile(
           file: imageProvider.selectedImageFile!,
-          ticketId: ticketId,
+          path:
+              'id_cards/$ticketId/${imageProvider.selectedImageFile!.path.split('/').last}',
         );
+      }
+      if (imageUrl != null) {
+        StorageService.updateID(ticketId, imageUrl);
       }
 
       paymentProvider.setLoading(false);
@@ -238,18 +246,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Image.network(
                   'https://cdn.dribbble.com/userupload/9637157/file/original-67f4815f35a54c02a49213d55e7f019b.jpg?resize=800x0',
                   fit: BoxFit.cover,
+                  gaplessPlayback: true,
                 ),
               ),
 
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withValues(alpha: .1),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: Container(
-                      color: Colors.black.withValues(alpha: 0.2),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+
+                      colors: [
+                        Color.fromARGB(115, 253, 251, 251),
+                        Color(0xFFE2D1C3),
+                      ],
                     ),
                   ),
+
+                  // color: Colors.black.withValues(alpha: .1),
                 ),
               ),
 
@@ -268,34 +283,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(25),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                            child: Container(
+                          child: Card(
+                            elevation: 12,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            color: Colors.white,
+                            child: Padding(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: (0.15)),
-                                borderRadius: BorderRadius.circular(25),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                ),
-                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Onam Celebration 2025 ',
-                                    style: TextStyle(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
+                                  Text(
+                                    'Onam Celebration 2025',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
                                   ),
                                   const SizedBox(height: 6),
-                                  const Text(
-                                    'Date: Aug 28, 2025\nVenue: Krupanidhi college\nTicket: ₹700 per person',
+                                  Text(
+                                    'Date: Aug 28, 2025\nVenue: Krupanidhi college\nTicket: ₹705 per person',
                                     style: TextStyle(
-                                      color: Colors.white70,
+                                      color: Colors.black54,
                                       fontSize: 14,
+                                      fontFamily: 'Quicksanju',
                                     ),
                                   ),
                                   const SizedBox(height: 28),
@@ -305,18 +320,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                      color: Colors.black87,
+                                      fontFamily: "Quicksanju",
+                                      letterSpacing: 0,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
 
-                                  GlassTextField(
+                                  PremiumTextField(
                                     controller: nameController,
                                     label: 'Full Name',
                                     icon: Icons.person,
                                   ),
                                   const SizedBox(height: 12),
-                                  GlassTextField(
+                                  PremiumTextField(
                                     controller: phoneController,
                                     label: 'Phone Number',
                                     icon: Icons.phone,
@@ -340,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             "Upload Your College ID Card",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: Colors.black87,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -356,7 +373,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     : Colors.red,
                                               ),
                                               const SizedBox(width: 8),
-                                              Flexible(
+                                              SizedBox(
+                                                width:
+                                                    MediaQuery.sizeOf(
+                                                      context,
+                                                    ).width *
+                                                    .60,
+                                                height: 20,
                                                 child: Text(
                                                   imageSelected
                                                       ? kIsWeb
@@ -379,7 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     fontSize: 16,
                                                     color: imageSelected
                                                         ? Colors.green
-                                                        : Colors.white,
+                                                        : Colors.black87,
                                                   ),
                                                 ),
                                               ),
@@ -410,7 +433,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
-                                            Colors.orangeAccent.shade200,
+                                            Colors.deepOrangeAccent,
+                                        foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 16,
                                         ),
@@ -419,11 +443,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                             16,
                                           ),
                                         ),
+                                        elevation: 4,
                                       ),
                                       onPressed: startPayment,
-
                                       child: const Text(
-                                        'Proceed to Payment (₹700)',
+                                        'Proceed to Payment (₹705)',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,

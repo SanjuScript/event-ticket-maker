@@ -44,6 +44,7 @@ dependencies:
   http: ^1.4.0
   file_picker: ^10.2.1
   http_parser: ^4.1.2
+  firebase_storage: ^13.0.0
 
 dev_dependencies:
   flutter_test:
@@ -83,10 +84,15 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: Quicksanju
+      fonts:
+        - asset: fonts/Quicksand_Bold.otf
+          weight: 700
+    - family: Quicksand
+      fonts:
+        - asset: fonts/Quicksand_Book.otf
+          weight: 400
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

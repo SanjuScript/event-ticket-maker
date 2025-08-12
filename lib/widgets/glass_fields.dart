@@ -1,14 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-class GlassTextField extends StatelessWidget {
+class PremiumTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final IconData icon;
   final TextInputType keyboardType;
   final String? prefixText;
 
-  const GlassTextField({
+  const PremiumTextField({
     super.key,
     required this.controller,
     required this.label,
@@ -19,33 +18,33 @@ class GlassTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: const TextStyle(color: Colors.white70),
-              prefixIcon: Icon(icon, color: Colors.white),
-              prefixText: prefixText,
-              prefixStyle: const TextStyle(color: Colors.white, fontSize: 16),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 18,
-              ),
-            ),
-          ),
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.black87, fontSize: 16, fontFamily: "Quicksanju"),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.grey, fontFamily: "Quicksand",fontWeight: FontWeight.bold),
+        prefixIcon: Icon(icon, color: Colors.deepOrangeAccent),
+        prefixText: prefixText,
+        prefixStyle: const TextStyle(
+          color: Colors.black87,
+          fontSize: 16,
+          fontFamily: "Quicksanju"
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.deepOrangeAccent, width: 1.6),
         ),
       ),
     );

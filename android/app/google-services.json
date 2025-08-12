@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1064722173770",
-    "project_id": "event-ticket-maker",
-    "storage_bucket": "event-ticket-maker.firebasestorage.app"
+    "project_number": "395272863504",
+    "project_id": "event-ticket-maker-8e724",
+    "storage_bucket": "event-ticket-maker-8e724.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1064722173770:android:43b89451cbd06e1ba73bb3",
+        "mobilesdk_app_id": "1:395272863504:android:b6351ab03a52923f306f95",
         "android_client_info": {
           "package_name": "com.example.event_ticket_maker"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDuR8Sz9fWYzOiih1xRH2BzuDVw7OkLIcY"
+          "current_key": "AIzaSyAX9Gl25VD5_KzRRL9P-GVKREnwoG2yzK4"
         }
       ],
       "services": {

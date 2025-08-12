@@ -1,5 +1,6 @@
-import 'dart:html' as html; // ⬅️ Only for Flutter Web
+import 'dart:html' as html;
 import 'dart:typed_data';
+import 'package:event_ticket_maker/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -21,7 +22,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), _autoDownloadQrImage); // ⬅️ Try auto-download
+    Future.delayed(const Duration(milliseconds: 500), _autoDownloadQrImage);
   }
 
   Future<void> _autoDownloadQrImage() async {
@@ -58,9 +59,9 @@ class _SuccessScreenState extends State<SuccessScreen> {
 
   void _copyTicketId() {
     Clipboard.setData(ClipboardData(text: widget.ticketId));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Ticket ID copied")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("✅ Ticket ID copied")));
   }
 
   @override
@@ -82,11 +83,33 @@ class _SuccessScreenState extends State<SuccessScreen> {
               const SizedBox(height: 20),
               RepaintBoundary(
                 key: qrKey,
-                child: QrImageView(
-                  data: widget.ticketId,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                  backgroundColor: Colors.white,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 15,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: QrImageView(
+                    data: widget.ticketId,
+                    version: QrVersions.auto,
+                    size: 220,
+                    backgroundColor: Colors.white,
+                    eyeStyle: QrEyeStyle(
+                      eyeShape: QrEyeShape.circle,
+                      color: Colors.deepPurple,
+                    ),
+                    dataModuleStyle: QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.circle,
+                      color: Colors.deepPurple.shade700,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -101,20 +124,35 @@ class _SuccessScreenState extends State<SuccessScreen> {
                   ElevatedButton.icon(
                     onPressed: _manualDownload,
                     icon: const Icon(Icons.download),
-                    label: const Text("Download QR"),
+                    label: Text(
+                      "Download QR",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
                     onPressed: _copyTicketId,
                     icon: const Icon(Icons.copy),
-                    label: const Text("Copy ID"),
+                    label: Text(
+                      "Copy ID",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Back to Home"),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => HomeScreen()),
+                    (route) => false,
+                  );
+                },
+                child: Text(
+                  "Back to Home",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             ],
           ),

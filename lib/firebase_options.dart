@@ -50,20 +50,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBfCCy_bdWs2wZjDca6_7jvePzWv4KmMRg',
-    appId: '1:1064722173770:web:5048b899d22b62e7a73bb3',
-    messagingSenderId: '1064722173770',
-    projectId: 'event-ticket-maker',
-    authDomain: 'event-ticket-maker.firebaseapp.com',
-    storageBucket: 'event-ticket-maker.firebasestorage.app',
-    measurementId: 'G-XGGW64315R',
+    apiKey: 'AIzaSyBR3GoZH6fAjE6ywCFs8iTW6uwtBlCFvmo',
+    appId: '1:395272863504:web:4b26654b8eb6de97306f95',
+    messagingSenderId: '395272863504',
+    projectId: 'event-ticket-maker-8e724',
+    authDomain: 'event-ticket-maker-8e724.firebaseapp.com',
+    storageBucket: 'event-ticket-maker-8e724.firebasestorage.app',
+    measurementId: 'G-3VSNN8Z35G',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDuR8Sz9fWYzOiih1xRH2BzuDVw7OkLIcY',
-    appId: '1:1064722173770:android:43b89451cbd06e1ba73bb3',
-    messagingSenderId: '1064722173770',
-    projectId: 'event-ticket-maker',
-    storageBucket: 'event-ticket-maker.firebasestorage.app',
+    apiKey: 'AIzaSyAX9Gl25VD5_KzRRL9P-GVKREnwoG2yzK4',
+    appId: '1:395272863504:android:b6351ab03a52923f306f95',
+    messagingSenderId: '395272863504',
+    projectId: 'event-ticket-maker-8e724',
+    storageBucket: 'event-ticket-maker-8e724.firebasestorage.app',
   );
+
 }

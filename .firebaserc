@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "event-ticket-maker"
-  }
+    "default": "event-ticket-maker",
+    "production": "event-ticket-maker-8e724"
+  },
+  "targets": {},
+  "etags": {}
 }
