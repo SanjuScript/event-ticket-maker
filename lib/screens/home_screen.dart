@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 import 'package:event_ticket_maker/helper/string_helper.dart';
+import 'package:event_ticket_maker/models/payment_model.dart';
+import 'package:event_ticket_maker/provider/device_info_provider.dart';
 import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/success_screen.dart';
@@ -14,6 +16,7 @@ import 'package:event_ticket_maker/widgets/payment_button.dart';
 import 'package:event_ticket_maker/widgets/premium_image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_razorpay_web/flutter_razorpay_web.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'dart:js' as js;
@@ -26,6 +29,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  
+  RazorpayWeb razorpayWeb = RazorpayWeb();
+
+  void _handlePaymentSuccess(RpaySuccessResponse response) {
+    log(response.toJson().toString());
+    final Map<String, dynamic> resp = response.toMap();
+    final name = nameController.text.trim();
+    final phone = phoneController.text.trim();
+    final paymentResponse = RazorpayPaymentModel.fromJson(resp);
+    verifyAndSaveTicket(response: paymentResponse, name: name, phone: phone);
+  }
+
+  void _handlePaymentError(RpayFailedResponse response) {
+    log(response.toJson().toString());
+    StringHelper.showError("Payment failed: $response", context);
+  }
+
+  void _handleOnCancel(RpayCancelResponse response) {
+    log(response.toJson().toString());
+  }
+
   Future<void> startPayment() async {
     final paymentProvider = Provider.of<PaymentProvider>(
       context,
@@ -88,16 +112,12 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       final orderId = responseData['body']['id'];
-      openRazorpayCheckout(
+      makePayment(
         orderId: orderId,
         keyId: "rzp_test_lfbXLnyT9SLgph",
         amount: 705 * 100,
         name: name,
         phone: phone,
-        onSuccess: (paymentId) =>
-            verifyAndSaveTicket(paymentId: paymentId, name: name, phone: phone),
-        onError: (err) =>
-            StringHelper.showError("Payment failed: $err", context),
       );
     } catch (e) {
       if (mounted) {
@@ -111,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> verifyAndSaveTicket({
-    required String paymentId,
+    required RazorpayPaymentModel response,
     required String name,
     required String phone,
   }) async {
@@ -123,113 +143,107 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       listen: false,
     );
-
-    paymentProvider.setLoading(true);
-
-    final backendResponse = await http.post(
-      Uri.parse(
-        'https://us-central1-event-ticket-maker-8e724.cloudfunctions.net/api/verify-payment',
-      ),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'payment_id': paymentId, 'name': name, 'phone': phone}),
+    final deviceProvider = Provider.of<DeviceInfoProvider>(
+      context,
+      listen: false,
     );
 
-    final result = jsonDecode(backendResponse.body);
+    paymentProvider.setLoading(true);
+    final payload = {
+      'payment_info': response.toJson(),
+      'name': name,
+      'phone': phone,
+      'device_info': {
+        'device_model': deviceProvider.deviceModel,
+        'os': deviceProvider.os,
+        'user_agent': deviceProvider.userAgent,
+        'language': deviceProvider.language,
+      },
+      'ip_address': deviceProvider.ipAddress,
+    };
+    log(name: "PAYLOAD", payload.toString());
+    try {
+      final backendResponse = await http.post(
+        Uri.parse(
+          'https://us-central1-event-ticket-maker-8e724.cloudfunctions.net/api/verify-payment',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
 
-    if (result['status'] == 'success') {
-      paymentProvider.setPayment(true);
-      final ticketId = result['ticket_id'];
-      String? imageUrl;
-      if (kIsWeb && imageProvider.webImage != null) {
-        imageUrl = await StorageService.uploadWebImage(
-          data: imageProvider.webImage!,
-          path:
-              'id_cards/$ticketId/${imageProvider.webFileName ?? 'id_card.jpg'}',
-        );
-      } else if (!kIsWeb && imageProvider.selectedImageFile != null) {
-        imageUrl = await StorageService.uploadImageFile(
-          file: imageProvider.selectedImageFile!,
-          path:
-              'id_cards/$ticketId/${imageProvider.selectedImageFile!.path.split('/').last}',
-        );
+      final result = jsonDecode(backendResponse.body);
+
+      if (result['status'] == 'success') {
+        paymentProvider.setPayment(true);
+        final ticketId = result['ticket_id'];
+        String? imageUrl;
+        if (kIsWeb && imageProvider.webImage != null) {
+          imageUrl = await StorageService.uploadWebImage(
+            data: imageProvider.webImage!,
+            path:
+                'id_cards/$ticketId/${imageProvider.webFileName ?? 'id_card.jpg'}',
+          );
+        } else if (!kIsWeb && imageProvider.selectedImageFile != null) {
+          imageUrl = await StorageService.uploadImageFile(
+            file: imageProvider.selectedImageFile!,
+            path:
+                'id_cards/$ticketId/${imageProvider.selectedImageFile!.path.split('/').last}',
+          );
+        }
+        if (imageUrl != null) {
+          StorageService.updateID(ticketId, imageUrl);
+        }
+
+        paymentProvider.setLoading(false);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SuccessScreen(ticketId: ticketId),
+            ),
+          );
+        }
+      } else {
+        log("Payment verification failed");
+        log("Backend response: ${backendResponse.body}");
+
+        paymentProvider.setLoading(false);
       }
-      if (imageUrl != null) {
-        StorageService.updateID(ticketId, imageUrl);
-      }
-
-      paymentProvider.setLoading(false);
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => SuccessScreen(ticketId: ticketId)),
-        );
-      }
-    } else {
-      log("Payment verification failed");
-      log("Backend response: ${backendResponse.body}");
-
+    } catch (e) {
+      log("Error in verifying payment: $e");
       paymentProvider.setLoading(false);
     }
   }
 
-  void openRazorpayCheckout({
+  void makePayment({
     required String orderId,
     required String keyId,
     required int amount,
     required String name,
     required String phone,
-    required Function(String paymentId) onSuccess,
-    required Function(String error) onError,
   }) {
-    js.context.callMethod('eval', [
-      """
-    var options = {
-      "key": "$keyId",
+    final Map<String, dynamic> options = {
+      "key": keyId,
       "amount": "$amount",
       "currency": "INR",
       "name": "Onam Celebration",
       "description": "Ticket Payment",
-      "order_id": "$orderId",
+      "order_id": orderId,
       "send_sms_hash": true,
-      'readonly': {
-        'contact': true,
-        'email': true,
-      },
-      "handler": function (response){
-        window.onFlutterPaymentSuccess(response.razorpay_payment_id);
-      },
+      'readonly': {'contact': true, 'email': true},
       'method': {
         'upi': true,
         'card': false,
         'netbanking': false,
         'wallet': false,
         'emi': false,
-        'paylater': false
+        'paylater': false,
       },
-      "prefill": {
-        "name": "$name",
-        "contact": "$phone"
-      },
-      "theme": {
-        "color": "#F37254"
-      }
+      "prefill": {"name": name, "contact": phone},
+      "theme": {"color": "#F37254"},
     };
-    var rzp = new Razorpay(options);
-    rzp.open();
-    rzp.on('payment.failed', function (response){
-      window.onFlutterPaymentError(response.error.description);
-    });
-  """,
-    ]);
-
-    js.context["onFlutterPaymentSuccess"] = (String paymentId) {
-      onSuccess(paymentId);
-    };
-
-    js.context["onFlutterPaymentError"] = (String error) {
-      onError(error);
-    };
+    razorpayWeb.open(options);
   }
 
   final _textStyle = TextStyle(
@@ -241,6 +255,27 @@ class _HomeScreenState extends State<HomeScreen> {
   );
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+
+  void initializeRazorpay() {
+    razorpayWeb = RazorpayWeb(
+      onSuccess: _handlePaymentSuccess,
+      onCancel: _handleOnCancel,
+      onFailed: _handlePaymentError,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initializeRazorpay();
+  }
+
+  @override
+  void dispose() {
+    razorpayWeb.clear();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -423,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const SizedBox(height: 24),
 
                                       PaymentButton(onPressed: startPayment),
-                                      DeveloperInfo()
+                                      DeveloperInfo(),
                                     ],
                                   ),
                                 ),

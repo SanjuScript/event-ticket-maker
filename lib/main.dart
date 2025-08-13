@@ -1,4 +1,5 @@
 import 'package:event_ticket_maker/firebase_options.dart';
+import 'package:event_ticket_maker/provider/device_info_provider.dart';
 import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/home_screen.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => ImageUploadProvider()),
+        ChangeNotifierProvider(create: (_) => DeviceInfoProvider()),
       ],
       child: const MyApp(),
     ),
@@ -28,12 +30,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Provider.of<DeviceInfoProvider>(context).init();
     return MaterialApp(
       title: 'Onam Celebration Tickets',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        fontFamily: 'newbo', 
+        fontFamily: 'newbo',
         textTheme: TextTheme(
           headlineSmall: TextStyle(
             fontFamily: 'newbo',
