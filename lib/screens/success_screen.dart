@@ -16,13 +16,27 @@ class SuccessScreen extends StatefulWidget {
   State<SuccessScreen> createState() => _SuccessScreenState();
 }
 
-class _SuccessScreenState extends State<SuccessScreen> {
+class _SuccessScreenState extends State<SuccessScreen>
+    with SingleTickerProviderStateMixin {
   final GlobalKey qrKey = GlobalKey();
+
+  late AnimationController _controller;
+  late Animation<double> _fadeIn;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), _autoDownloadQrImage);
+
+    // Animations
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+
+    _controller.forward();
+
+    Future.delayed(const Duration(milliseconds: 700), _autoDownloadQrImage);
   }
 
   Future<void> _autoDownloadQrImage() async {
@@ -67,96 +81,129 @@ class _SuccessScreenState extends State<SuccessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black87,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.celebration, color: Colors.orange, size: 50),
-              const SizedBox(height: 16),
-              const Text(
-                'Ticket Booked Successfully!',
-                style: TextStyle(color: Colors.white, fontSize: 22),
-              ),
-              const SizedBox(height: 20),
-              RepaintBoundary(
-                key: qrKey,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 15,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: QrImageView(
-                    data: widget.ticketId,
-                    version: QrVersions.auto,
-                    size: 220,
-                    backgroundColor: Colors.white,
-                    eyeStyle: QrEyeStyle(
-                      eyeShape: QrEyeShape.circle,
-                      color: Colors.deepPurple,
-                    ),
-                    dataModuleStyle: QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.circle,
-                      color: Colors.deepPurple.shade700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SelectableText(
-                "Ticket ID: ${widget.ticketId}",
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _manualDownload,
-                    icon: const Icon(Icons.download),
-                    label: Text(
-                      "Download QR",
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton.icon(
-                    onPressed: _copyTicketId,
-                    icon: const Icon(Icons.copy),
-                    label: Text(
-                      "Copy ID",
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
+      backgroundColor: const Color(0xFF0D0D0D),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF2c6cbc),
+                  Color(0xFF71c3f7),
+                  Color(0xFFf6f6f6),
                 ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => HomeScreen()),
-                    (route) => false,
-                  );
-                },
-                child: Text(
-                  "Back to Home",
-                  style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+
+          Center(
+            child: FadeTransition(
+              opacity: _fadeIn,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(
+                      'Ticket Booked Successfully!',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 20),
+                    // QR Card
+                    RepaintBoundary(
+                      key: qrKey,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: QrImageView(
+                          data: widget.ticketId,
+                          version: QrVersions.auto,
+                          size: 220,
+                          backgroundColor: Colors.white,
+                          eyeStyle: QrEyeStyle(
+                            eyeShape: QrEyeShape.circle,
+                            color: Color(0xFF2c6cbc),
+                          ),
+                          dataModuleStyle: QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.circle,
+                            color: Color.fromARGB(255, 39, 85, 171),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SelectableText(
+                      "Ticket ID: ${widget.ticketId}",
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: _manualDownload,
+                          icon: const Icon(Icons.download, color: Colors.white),
+                          label: Text(
+                            "Download QR",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white54),
+                          ),
+                          onPressed: _copyTicketId,
+                          icon: const Icon(Icons.copy),
+                          label: const Text("Copy ID"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => HomeScreen()),
+                          (route) => false,
+                        );
+                      },
+                      child: Text(
+                        "Back to Home",
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

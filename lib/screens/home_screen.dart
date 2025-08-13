@@ -7,6 +7,7 @@ import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/success_screen.dart';
 import 'package:event_ticket_maker/services/storage_services.dart';
+import 'package:event_ticket_maker/widgets/developer_info.dart';
 import 'package:event_ticket_maker/widgets/glass_fields.dart';
 import 'package:event_ticket_maker/widgets/loading_widget.dart';
 import 'package:event_ticket_maker/widgets/payment_button.dart';
@@ -422,6 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const SizedBox(height: 24),
 
                                       PaymentButton(onPressed: startPayment),
+                                      DeveloperInfo()
                                     ],
                                   ),
                                 ),

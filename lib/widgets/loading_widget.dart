@@ -84,7 +84,7 @@ class _AnimatedLoadingTextState extends State<_AnimatedLoadingText>
     return FadeTransition(
       opacity: _fadeInFadeOut,
       child: Text(
-        widget.isPaymentDone ? "Loading Ticket...." : 'Processing Payment...',
+        widget.isPaymentDone ? "Verifying Payment...." : 'Processing Payment...',
         style: TextStyle(
           color: Colors.white,
           fontSize: 18,
