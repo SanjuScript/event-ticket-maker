@@ -1,57 +1,116 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-    <title>Onam Celebration Tickets</title>
+    <title>Anirudh Live Concert 2025</title>
     <base href="$FLUTTER_BASE_HREF" />
-
+    
+    <meta name="google-signin-client_id" content="395272863504-sbkna0b53pbg3p2t5htcr4oi5v3hs02a.apps.googleusercontent.com">
+        <!-- Razorpay -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
     <meta
       name="description"
-      content="Book your Onam Celebration event tickets online and get a unique QR code for entry. Easy, fast, and secure."
+      content="Book your tickets for Anirudh Ravichander's Live Concert 2025 at Krupanidhi College, Bengaluru. Fast, secure UPI payment with instant QR ticket."
     />
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
     <!-- iOS meta tags & icons -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="Onam Tickets" />
+    <meta name="apple-mobile-web-app-title" content="Anirudh Live 2025" />
     <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-    <!-- sharing -->
-    <meta property="og:title" content="Onam Celebration Tickets" />
+    <!-- Open Graph / Sharing -->
+    <meta property="og:title" content="Anirudh Live Concert 2025" />
     <meta
       property="og:description"
-      content="Book your Onam Celebration event tickets online and get a unique QR code for entry."
+      content="Book your tickets for Anirudh Ravichander's Live Concert at Krupanidhi College, Bengaluru — 28 August 2025."
     />
     <meta property="og:image" content="icons/Icon-512.png" />
-    <meta
-      property="og:url"
-      content="https://event-ticket-maker-8e724.web.app"
-    />
+    <meta property="og:url" content="https://event-ticket-maker-8e724.web.app" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Anirudh Live Concert 2025" />
+    <meta
+      name="twitter:description"
+      content="Book your tickets for Anirudh Ravichander's Live Concert at Krupanidhi College, Bengaluru."
+    />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <!-- Animated Favicon -->
+<script>
+  (function () {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    document.head.appendChild(link);
 
+    let frame = 0;
+
+    function draw() {
+      ctx.clearRect(0, 0, 64, 64);
+
+      const t = frame / 60;
+
+      // Background
+      ctx.fillStyle = '#0A0A0A';
+      ctx.fillRect(0, 0, 64, 64);
+
+      // Pulsing outer ring
+      const pulse = 0.85 + Math.sin(t * Math.PI * 2) * 0.08;
+      ctx.beginPath();
+      ctx.arc(32, 32, 28 * pulse, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(232, 255, 71, ${0.2 + Math.sin(t * Math.PI * 2) * 0.15})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Spinning arc
+      const arcStart = t * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(32, 32, 26, arcStart, arcStart + Math.PI * 1.3);
+      ctx.strokeStyle = '#E8FF47';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Second arc (opposite, dimmer)
+      ctx.beginPath();
+      ctx.arc(32, 32, 26, arcStart + Math.PI, arcStart + Math.PI * 2.0);
+      ctx.strokeStyle = 'rgba(232, 255, 71, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Inner glow circle
+      const grd = ctx.createRadialGradient(32, 32, 2, 32, 32, 16);
+      grd.addColorStop(0, `rgba(232, 255, 71, ${0.5 + Math.sin(t * Math.PI * 2) * 0.3})`);
+      grd.addColorStop(1, 'rgba(232, 255, 71, 0)');
+      ctx.beginPath();
+      ctx.arc(32, 32, 16, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+
+      // Lightning bolt ⚡ center
+      ctx.fillStyle = '#E8FF47';
+      ctx.font = 'bold 22px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚡', 32, 33);
+
+      link.href = canvas.toDataURL('image/png');
+      frame = (frame + 1) % 60;
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  })();
+</script>
     <link rel="manifest" href="manifest.json" />
   </head>
   <body>
@@ -59,9 +118,8 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
-    <!-- Razorpay -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <!-- Your Firebase Config -->
+
+    <!-- Firebase Config -->
     <script src="firebase-config.js"></script>
   </body>
 </html>

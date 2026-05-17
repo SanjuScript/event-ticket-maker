@@ -1,11 +1,11 @@
 {
-  "name": "Onam Celebration Tickets",
-  "short_name": "Onam Tickets",
+  "name": "Anirudhs Live Concert",
+  "short_name": "Concert Tickets",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffcc00",
-  "description": "Book tickets for Onam celebration and get a unique QR code for entry.",
+  "description": "Book tickets for Anirudhs Live Concert and get a unique QR code for entry.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
