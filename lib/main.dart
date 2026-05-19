@@ -5,18 +5,125 @@ import 'package:event_ticket_maker/firebase_options.dart';
 import 'package:event_ticket_maker/provider/device_info_provider.dart';
 import 'package:event_ticket_maker/provider/select_image.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
-import 'package:event_ticket_maker/screens/home_page.dart';
 import 'package:event_ticket_maker/screens/maintainance_screen.dart';
 import 'package:event_ticket_maker/screens/splash_screen.dart';
-import 'package:event_ticket_maker/screens/success_screen.dart';
 import 'package:event_ticket_maker/widgets/gate_wrapper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+
+const _defaultPrimaryColor = Color(0xFFE8FF47);
+
+Color _parsePrimaryColor(dynamic value) {
+  if (value is Color) return value;
+
+  if (value is int) {
+    return Color(value);
+  }
+
+  if (value is String) {
+    final normalized = value
+        .trim()
+        .replaceFirst('#', '')
+        .replaceFirst('0x', '')
+        .replaceFirst('0X', '');
+
+    if (normalized.length == 6) {
+      return Color(int.parse('FF$normalized', radix: 16));
+    }
+
+    if (normalized.length == 8) {
+      return Color(int.parse(normalized, radix: 16));
+    }
+  }
+
+  return _defaultPrimaryColor;
+}
+
+bool _parseBool(dynamic value, {required bool fallback}) {
+  if (value is bool) return value;
+
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true') return true;
+    if (normalized == 'false') return false;
+  }
+
+  return fallback;
+}
+
+ThemeData _buildAppTheme({
+  required Color primaryColor,
+  required Brightness brightness,
+}) {
+  final isDark = brightness == Brightness.dark;
+  final backgroundColor = isDark
+      ? const Color(0xFF050505)
+      : const Color(0xFFF7F7F2);
+  final surfaceColor = isDark ? const Color(0xFF141414) : Colors.white;
+  final textColor = isDark ? const Color(0xFFF5F5F0) : const Color(0xFF111111);
+  final mutedTextColor = isDark
+      ? const Color(0xFFBEBEB8)
+      : const Color(0xFF4A4A4A);
+
+  final colorScheme =
+      ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: brightness,
+      ).copyWith(
+        primary: primaryColor,
+        secondary: primaryColor,
+        tertiary: primaryColor,
+      );
+
+  return ThemeData(
+    brightness: brightness,
+    colorScheme: colorScheme,
+    primaryColor: primaryColor,
+    scaffoldBackgroundColor: backgroundColor,
+    canvasColor: backgroundColor,
+    fontFamily: 'newbo',
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: primaryColor),
+    appBarTheme: AppBarTheme(
+      backgroundColor: backgroundColor,
+      foregroundColor: textColor,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: surfaceColor,
+      contentTextStyle: TextStyle(
+        fontFamily: 'newboT',
+        fontWeight: FontWeight.bold,
+        color: textColor,
+      ),
+    ),
+    textTheme: const TextTheme(
+      headlineSmall: TextStyle(
+        fontFamily: 'newbo',
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0,
+      ),
+      headlineMedium: TextStyle(
+        fontFamily: 'newbo',
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0,
+      ),
+      bodySmall: TextStyle(
+        fontFamily: 'newboT',
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0,
+      ),
+      bodyMedium: TextStyle(
+        fontFamily: 'newboT',
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0,
+      ),
+    ).apply(bodyColor: mutedTextColor, displayColor: textColor),
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,36 +179,24 @@ class MyApp extends StatelessWidget {
         final liveSettings =
             (snapshot.data?.data() as Map<String, dynamic>?) ?? settings;
         final isMaintenance = liveSettings['maintenanceMode'] == true;
+        final primaryColor = _parsePrimaryColor(liveSettings['primaryColor']);
+        final darkModeForced = _parseBool(
+          liveSettings['darkModeForced'],
+          fallback: true,
+        );
 
         return MaterialApp(
           title: liveSettings['eventName'] ?? settings['eventName'] ?? 'Event',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            fontFamily: 'newbo',
-            textTheme: const TextTheme(
-              headlineSmall: TextStyle(
-                fontFamily: 'newbo',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-              ),
-              headlineMedium: TextStyle(
-                fontFamily: 'newbo',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-              ),
-              bodySmall: TextStyle(
-                fontFamily: 'newboT',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-              ),
-              bodyMedium: TextStyle(
-                fontFamily: 'newboT',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-              ),
-            ),
+          theme: _buildAppTheme(
+            primaryColor: primaryColor,
+            brightness: Brightness.light,
           ),
+          darkTheme: _buildAppTheme(
+            primaryColor: primaryColor,
+            brightness: Brightness.dark,
+          ),
+          themeMode: darkModeForced ? ThemeMode.dark : ThemeMode.system,
           home: isMaintenance
               ? _MaintenanceGate(liveSettings: liveSettings)
               : GateWrapper(
@@ -121,6 +216,7 @@ class _MaintenanceGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final primaryColor = _parsePrimaryColor(liveSettings['primaryColor']);
 
     if (uid == null) {
       return const MaintenanceScreen();
@@ -133,11 +229,11 @@ class _MaintenanceGate extends StatelessWidget {
           .get(),
       builder: (context, userSnap) {
         if (userSnap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF0A0A0A),
+          return Scaffold(
+            backgroundColor: const Color(0xFF0A0A0A),
             body: Center(
               child: CircularProgressIndicator(
-                color: Color(0xFFE8FF47),
+                color: primaryColor,
                 strokeWidth: 1.5,
               ),
             ),

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:event_ticket_maker/theme/site_theme.dart';
 
 class MaintenanceScreen extends StatelessWidget {
   const MaintenanceScreen({super.key});
 
   static const _bg = Color(0xFF0A0A0A);
-  static const _accent = Color(0xFFE8FF47);
   static const _muted = Color(0xFF888888);
   static const _white = Color(0xFFF5F5F0);
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.siteAccent;
+
     return Scaffold(
       backgroundColor: _bg,
       body: Center(
@@ -20,13 +22,9 @@ class MaintenanceScreen extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                border: Border.all(color: _accent.withOpacity(0.3)),
+                border: Border.all(color: accent.withOpacity(0.3)),
               ),
-              child: const Icon(
-                Icons.construction_outlined,
-                color: _accent,
-                size: 28,
-              ),
+              child: Icon(Icons.construction_outlined, color: accent, size: 28),
             ),
             const SizedBox(height: 24),
             const Text(

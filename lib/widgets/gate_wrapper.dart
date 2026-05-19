@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:event_ticket_maker/theme/site_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -22,11 +23,6 @@ class _GateWrapperState extends State<GateWrapper> {
   Stream<DocumentSnapshot<Map<String, dynamic>>>? _eventStream;
 
   static const _bg = Color(0xFF0A0A0A);
-  static const _accent = Color(0xFFE8FF47);
-  static const _muted = Color(0xFF888888);
-  static const _white = Color(0xFFF5F5F0);
-  static const _border = Color(0xFF2A2A2A);
-  static const _surface = Color(0xFF141414);
 
   @override
   void initState() {
@@ -125,11 +121,11 @@ class _LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0A0A0A),
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A0A),
       body: Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFE8FF47),
+          color: context.siteAccent,
           strokeWidth: 1.5,
         ),
       ),
@@ -149,7 +145,6 @@ class _RestrictedScreen extends StatelessWidget {
   });
 
   static const _bg = Color(0xFF0A0A0A);
-  static const _accent = Color(0xFFE8FF47);
   static const _muted = Color(0xFF888888);
   static const _white = Color(0xFFF5F5F0);
   static const _border = Color(0xFF2A2A2A);
@@ -157,6 +152,8 @@ class _RestrictedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.siteAccent;
+
     return Scaffold(
       backgroundColor: _bg,
       body: Center(
@@ -225,7 +222,7 @@ class _RestrictedScreen extends StatelessWidget {
                         horizontal: 32,
                         vertical: 14,
                       ),
-                      color: _accent,
+                      color: accent,
                       child: const Text(
                         'SIGN IN WITH GOOGLE',
                         style: TextStyle(

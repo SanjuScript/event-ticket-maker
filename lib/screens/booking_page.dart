@@ -6,6 +6,7 @@ import 'package:event_ticket_maker/provider/device_info_provider.dart';
 import 'package:event_ticket_maker/provider/verification_state.dart';
 import 'package:event_ticket_maker/screens/success_screen.dart';
 import 'package:event_ticket_maker/services/google_auth.dart';
+import 'package:event_ticket_maker/theme/site_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,7 +20,6 @@ import 'package:provider/provider.dart';
 
 // ── Constants ─────────────────────────────────────────────────
 const _bg = Color(0xFF050505);
-const _accent = Color(0xFFE8FF47);
 const _accent2 = Color(0xFFFF3CAC);
 const _white = Color(0xFFF5F5F0);
 const _muted = Color(0xFF888888);
@@ -30,7 +30,6 @@ const _error = Color(0xFFFF4444);
 // ── Config — update these ─────────────────────────────────────
 const _razorpayKeyId = 'rzp_test_SOoQi14i47lKnS';
 const _backendBase = 'http://localhost:3000';
-const _eventName = 'Neon Nights';
 
 enum TicketType { general, vip }
 
@@ -60,6 +59,36 @@ class _BookingPageState extends State<BookingPage> {
 
   // Razorpay
   late RazorpayWeb razorpayWeb;
+
+  Color get _accentColor => context.siteAccent;
+
+  String get _paymentThemeColor {
+    final raw = widget.settings['primaryColor']?.toString().trim();
+    if (raw == null || raw.isEmpty) return '#E8FF47';
+    if (raw.startsWith('#')) return raw;
+    if (raw.startsWith('0x') || raw.startsWith('0X')) {
+      return '#${raw.substring(2)}';
+    }
+    return '#$raw';
+  }
+
+  bool _isMobileLayout(BuildContext context) =>
+      MediaQuery.of(context).size.width < 768;
+
+  bool _isTabletLayout(BuildContext context) =>
+      MediaQuery.of(context).size.width < 1100;
+
+  double _responsiveInset(
+    BuildContext context, {
+    required double mobile,
+    required double tablet,
+    required double desktop,
+  }) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 768) return mobile;
+    if (width < 1100) return tablet;
+    return desktop;
+  }
 
   @override
   void initState() {
@@ -246,7 +275,7 @@ class _BookingPageState extends State<BookingPage> {
       'key': keyId,
       'amount': '$amount',
       'currency': 'INR',
-      'name': _eventName,
+      'name': widget.settings["eventName"] ?? '',
       'description': '$_ticketLabel × $_quantity',
       'send_sms_hash': true,
       'readonly': {'contact': true, 'email': true},
@@ -260,7 +289,7 @@ class _BookingPageState extends State<BookingPage> {
         'paylater': false,
       },
       'prefill': {'name': name, 'contact': phone},
-      'theme': {'color': '#E8FF47'},
+      'theme': {'color': _paymentThemeColor},
     });
   }
 
@@ -424,10 +453,10 @@ class _BookingPageState extends State<BookingPage> {
   // ── UI helpers ────────────────────────────────────────────────
   Widget _monoLabel(String text) => Text(
     text.toUpperCase(),
-    style: const TextStyle(
+    style: TextStyle(
       fontFamily: 'monospace',
       fontSize: 10,
-      color: _accent,
+      color: _accentColor,
       letterSpacing: 3,
     ),
   );
@@ -437,230 +466,356 @@ class _BookingPageState extends State<BookingPage> {
   // ── Step indicator ────────────────────────────────────────────
   Widget _stepIndicator() {
     const labels = ['SELECT', 'DETAILS', 'CONFIRM'];
-    return Row(
-      children: List.generate(labels.length, (i) {
-        final active = i == _step;
-        final done = i < _step;
-        return Row(
-          children: [
-            Column(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: done
-                        ? _accent
-                        : active
-                        ? _accent.withOpacity(0.12)
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: done || active ? _accent : _border,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(labels.length, (i) {
+          final active = i == _step;
+          final done = i < _step;
+          return Row(
+            children: [
+              Column(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: done
+                          ? _accentColor
+                          : active
+                          ? _accentColor.withOpacity(0.12)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: done || active ? _accentColor : _border,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: done
+                        ? const Icon(Icons.check, color: Colors.black, size: 13)
+                        : Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: active ? _accentColor : _muted,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    labels[i],
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: active ? _accentColor : _muted,
+                      letterSpacing: 2,
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: done
-                      ? const Icon(Icons.check, color: Colors.black, size: 13)
-                      : Text(
-                          '${i + 1}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: active ? _accent : _muted,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  labels[i],
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: active ? _accent : _muted,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ],
-            ),
-            if (i < labels.length - 1)
-              Container(
-                width: 40,
-                height: 1,
-                margin: const EdgeInsets.only(bottom: 20),
-                color: i < _step ? _accent : _border,
+                ],
               ),
+              if (i < labels.length - 1)
+                Container(
+                  width: 40,
+                  height: 1,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  color: i < _step ? _accentColor : _border,
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _bookingIntro() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _monoLabel(
+          ['Choose Your Ticket', 'Attendee Details', 'Review & Pay'][_step],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          [
+            'Select ticket type and quantity.',
+            'Your QR ticket will be sent to this email.',
+            'Confirm details and complete payment via UPI.',
+          ][_step],
+          style: const TextStyle(color: _muted, fontSize: 13, height: 1.6),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.arrow_back, color: _muted, size: 13),
+            SizedBox(width: 8),
+            Text(
+              'BACK',
+              style: TextStyle(color: _muted, fontSize: 10, letterSpacing: 2),
+            ),
           ],
-        );
-      }),
+        ),
+      ),
     );
   }
 
   // ══════════════════════════════════════════════════════════════
   // LEFT PANEL
   // ══════════════════════════════════════════════════════════════
-  Widget _leftPanel() {
+  Widget _leftPanel({bool embedded = false}) {
     final s = widget.settings;
     final eventName = s['eventName']?.toString() ?? 'Neon Nights';
     final location = s['location']?.toString() ?? 'Chennai';
     final date = _formatDate(s['eventDate']);
     final gaPrice = (s['ticketPrice'] as num?)?.toInt() ?? 799;
     final vipPrice = (s['vipPrice'] as num?)?.toInt() ?? 1999;
+    final isMobile = _isMobileLayout(context);
+    final isCompact = _isTabletLayout(context);
+    final padding = _responsiveInset(
+      context,
+      mobile: 20,
+      tablet: 36,
+      desktop: 64,
+    );
+    final titleSize = isMobile
+        ? 36.0
+        : isCompact
+        ? 44.0
+        : 52.0;
 
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: _border)),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          Positioned(
-            left: -80,
-            top: 120,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [_accent.withOpacity(0.07), Colors.transparent],
-                ),
-              ),
-            ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isMobile) ...[
+          _backButton(),
+          const SizedBox(height: 16),
+          _userChip(compact: true),
+        ] else
+          Row(children: [_backButton(), const Spacer(), _userChip()]),
+        SizedBox(height: isMobile ? 40 : 64),
+        _monoLabel('Booking'),
+        const SizedBox(height: 20),
+        Text(
+          eventName.toUpperCase(),
+          style: TextStyle(
+            fontSize: titleSize,
+            fontWeight: FontWeight.w900,
+            color: _white,
+            height: 0.92,
+            letterSpacing: -1,
           ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(64),
-            child: Column(
+        ),
+        Text(
+          'VOL. 3',
+          style: TextStyle(
+            fontSize: titleSize,
+            fontWeight: FontWeight.w900,
+            color: _accent2,
+            height: 0.92,
+            letterSpacing: -1,
+          ),
+        ),
+        SizedBox(height: isMobile ? 32 : 48),
+        _divider(),
+        SizedBox(height: isMobile ? 24 : 32),
+        _metaRow('Date', date, compact: isCompact),
+        const SizedBox(height: 20),
+        _metaRow('Doors Open', '7:00 PM', compact: isCompact),
+        const SizedBox(height: 20),
+        _metaRow('Venue', location, compact: isCompact),
+        const SizedBox(height: 20),
+        _metaRow(
+          'Capacity',
+          '${s['totalBookingsAllowed'] ?? 500} only',
+          compact: isCompact,
+        ),
+        SizedBox(height: isMobile ? 24 : 32),
+        _divider(),
+        SizedBox(height: isMobile ? 24 : 32),
+        _monoLabel('Pricing'),
+        const SizedBox(height: 20),
+        _priceRow('General Admission', '₹$gaPrice'),
+        if (_vipEnabled) ...[
+          const SizedBox(height: 1),
+          _priceRow('VIP Access', '₹$vipPrice', accent: true),
+        ],
+        SizedBox(height: isMobile ? 24 : 32),
+        _divider(),
+        SizedBox(height: isMobile ? 24 : 32),
+        _monoLabel('Policies'),
+        const SizedBox(height: 16),
+        ...[
+          'Non-refundable after purchase',
+          'Non-transferable tickets',
+          'Valid government ID required',
+          'No re-entry once you exit',
+          'Ages 18+ strictly enforced',
+          'UPI payments only',
+        ].map(
+          (p) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Row(
-                      children: [
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.arrow_back, color: _muted, size: 13),
-                                SizedBox(width: 8),
-                                Text(
-                                  'BACK',
-                                  style: TextStyle(
-                                    color: _muted,
-                                    fontSize: 10,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        _userChip(),
-                      ],
-                    ),
-                  ),
+                Container(
+                  width: 14,
+                  height: 1,
+                  margin: const EdgeInsets.only(top: 8),
+                  color: _muted,
                 ),
-                const SizedBox(height: 64),
-                _monoLabel('Booking'),
-                const SizedBox(height: 20),
-                Text(
-                  eventName.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 52,
-                    fontWeight: FontWeight.w900,
-                    color: _white,
-                    height: 0.92,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const Text(
-                  'VOL. 3',
-                  style: TextStyle(
-                    fontSize: 52,
-                    fontWeight: FontWeight.w900,
-                    color: _accent2,
-                    height: 0.92,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                _divider(),
-                const SizedBox(height: 32),
-                _metaRow('Date', date),
-                const SizedBox(height: 20),
-                _metaRow('Doors Open', '7:00 PM'),
-                const SizedBox(height: 20),
-                _metaRow('Venue', location),
-                const SizedBox(height: 20),
-                _metaRow(
-                  'Capacity',
-                  '${s['totalBookingsAllowed'] ?? 500} only',
-                ),
-                const SizedBox(height: 32),
-                _divider(),
-                const SizedBox(height: 32),
-                _monoLabel('Pricing'),
-                const SizedBox(height: 20),
-                _priceRow('General Admission', '₹$gaPrice'),
-                if (_vipEnabled) ...[
-                  const SizedBox(height: 1),
-                  _priceRow('VIP Access', '₹$vipPrice', accent: true),
-                ],
-                const SizedBox(height: 32),
-                _divider(),
-                const SizedBox(height: 32),
-                _monoLabel('Policies'),
-                const SizedBox(height: 16),
-                ...[
-                  'Non-refundable after purchase',
-                  'Non-transferable tickets',
-                  'Valid government ID required',
-                  'No re-entry once you exit',
-                  'Ages 18+ strictly enforced',
-                  'UPI payments only',
-                ].map(
-                  (p) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 14,
-                          height: 1,
-                          margin: const EdgeInsets.only(top: 8),
-                          color: _muted,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            p,
-                            style: const TextStyle(
-                              color: _muted,
-                              fontSize: 12,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    p,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                      height: 1.5,
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          right: embedded || isCompact
+              ? BorderSide.none
+              : const BorderSide(color: _border),
+          bottom: embedded || isCompact
+              ? const BorderSide(color: _border)
+              : BorderSide.none,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+          Positioned(
+            left: isMobile ? -100 : -80,
+            top: isMobile ? 70 : 120,
+            child: Container(
+              width: isMobile ? 280 : 400,
+              height: isMobile ? 280 : 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [_accentColor.withOpacity(0.07), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          if (embedded)
+            Padding(padding: EdgeInsets.all(padding), child: content)
+          else
+            SingleChildScrollView(
+              padding: EdgeInsets.all(padding),
+              child: content,
+            ),
         ],
       ),
     );
   }
 
-  Widget _userChip() {
+  Widget _userChip({bool compact = false}) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const SizedBox.shrink();
+
+    if (compact) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _card,
+          border: Border.all(color: _border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: _accentColor.withOpacity(0.15),
+                  child: user.photoURL != null
+                      ? ClipOval(
+                          child: Image.network(
+                            user.photoURL!,
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Text(
+                              (user.displayName ?? user.email ?? '?')[0]
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                color: _accentColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Text(
+                          (user.displayName ?? user.email ?? '?')[0]
+                              .toUpperCase(),
+                          style: TextStyle(
+                            color: _accentColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (user.displayName != null &&
+                          user.displayName!.isNotEmpty)
+                        Text(
+                          user.displayName!,
+                          style: const TextStyle(
+                            color: _white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      Text(
+                        user.email ?? '',
+                        style: const TextStyle(color: _muted, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () async {
+                await GoogleAuthService.instance.signOut();
+                if (context.mounted) Navigator.of(context).pop();
+              },
+              child: const Text(
+                'SIGN OUT',
+                style: TextStyle(color: _muted, fontSize: 9, letterSpacing: 2),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -674,7 +829,7 @@ class _BookingPageState extends State<BookingPage> {
           // Avatar
           CircleAvatar(
             radius: 14,
-            backgroundColor: _accent.withOpacity(0.15),
+            backgroundColor: _accentColor.withOpacity(0.15),
             child: user.photoURL != null
                 ? ClipOval(
                     child: Image.network(
@@ -685,8 +840,8 @@ class _BookingPageState extends State<BookingPage> {
                       errorBuilder: (_, __, ___) => Text(
                         (user.displayName ?? user.email ?? '?')[0]
                             .toUpperCase(),
-                        style: const TextStyle(
-                          color: _accent,
+                        style: TextStyle(
+                          color: _accentColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -695,8 +850,8 @@ class _BookingPageState extends State<BookingPage> {
                   )
                 : Text(
                     (user.displayName ?? user.email ?? '?')[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: _accent,
+                    style: TextStyle(
+                      color: _accentColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -746,36 +901,67 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  Widget _metaRow(String label, String value) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SizedBox(
-        width: 100,
-        child: Text(
-          label.toUpperCase(),
-          style: const TextStyle(fontSize: 9, color: _muted, letterSpacing: 2),
-        ),
-      ),
-      Expanded(
-        child: Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            color: _white,
-            fontWeight: FontWeight.w500,
+  Widget _metaRow(String label, String value, {bool compact = false}) {
+    if (compact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 9,
+              color: _muted,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: _white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 9,
+              color: _muted,
+              letterSpacing: 2,
+            ),
           ),
         ),
-      ),
-    ],
-  );
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: _white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _priceRow(String label, String price, {bool accent = false}) =>
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: accent ? _accent.withOpacity(0.05) : Colors.transparent,
+          color: accent ? _accentColor.withOpacity(0.05) : Colors.transparent,
           border: Border.all(
-            color: accent ? _accent.withOpacity(0.3) : _border,
+            color: accent ? _accentColor.withOpacity(0.3) : _border,
           ),
         ),
         child: Row(
@@ -785,7 +971,7 @@ class _BookingPageState extends State<BookingPage> {
             Text(
               price,
               style: TextStyle(
-                color: accent ? _accent : _white,
+                color: accent ? _accentColor : _white,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -800,49 +986,43 @@ class _BookingPageState extends State<BookingPage> {
   Widget _rightPanel() {
     return Consumer<PaymentProvider>(
       builder: (context, pp, _) {
+        final padding = _responsiveInset(
+          context,
+          mobile: 20,
+          tablet: 36,
+          desktop: 64,
+        );
+
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(64),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _stepIndicator(),
-              const SizedBox(height: 56),
-              _monoLabel(
-                [
-                  'Choose Your Ticket',
-                  'Attendee Details',
-                  'Review & Pay',
-                ][_step],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                [
-                  'Select ticket type and quantity.',
-                  'Your QR ticket will be sent to this email.',
-                  'Confirm details and complete payment via UPI.',
-                ][_step],
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 13,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 40),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: KeyedSubtree(
-                  key: ValueKey(_step),
-                  child: switch (_step) {
-                    0 => _buildSelectStep(),
-                    1 => _buildDetailsStep(),
-                    _ => _buildConfirmStep(pp),
-                  },
-                ),
-              ),
-            ],
-          ),
+          padding: EdgeInsets.all(padding),
+          child: _rightPanelContent(pp, embedded: false),
         );
       },
+    );
+  }
+
+  Widget _rightPanelContent(PaymentProvider pp, {required bool embedded}) {
+    final isMobile = _isMobileLayout(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _stepIndicator(),
+        SizedBox(height: isMobile ? 32 : 56),
+        _bookingIntro(),
+        const SizedBox(height: 40),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: KeyedSubtree(
+            key: ValueKey(_step),
+            child: switch (_step) {
+              0 => _buildSelectStep(),
+              1 => _buildDetailsStep(),
+              _ => _buildConfirmStep(pp),
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -850,6 +1030,7 @@ class _BookingPageState extends State<BookingPage> {
     final maxPerUser = (widget.settings['maxPerUser'] as num?)?.toInt() ?? 6;
     final totalAllowed =
         (widget.settings['totalBookingsAllowed'] as num?)?.toInt() ?? 500;
+    final isMobile = _isMobileLayout(context);
 
     final effectiveMax = maxPerUser.clamp(
       1,
@@ -934,42 +1115,70 @@ class _BookingPageState extends State<BookingPage> {
         const SizedBox(height: 40),
         _divider(),
         const SizedBox(height: 28),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_quantity × $_ticketLabel',
-                  style: const TextStyle(color: _muted, fontSize: 12),
+        if (isMobile)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '$_quantity × $_ticketLabel',
+                style: const TextStyle(color: _muted, fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '₹$_total',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                  color: _accentColor,
+                  height: 1,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '₹$_total',
-                  style: const TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w900,
-                    color: _accent,
-                    height: 1,
+              ),
+              const SizedBox(height: 20),
+              _PrimaryBtn(
+                label: 'CONTINUE →',
+                onTap: () => setState(() => _step = 1),
+                expand: true,
+              ),
+            ],
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$_quantity × $_ticketLabel',
+                    style: const TextStyle(color: _muted, fontSize: 12),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            _PrimaryBtn(
-              label: 'CONTINUE →',
-              onTap: () => setState(() => _step = 1),
-              // onTap: () => GoogleAuthService.instance.signOut(),
-            ),
-          ],
-        ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '₹$_total',
+                    style: TextStyle(
+                      fontSize: 44,
+                      fontWeight: FontWeight.w900,
+                      color: _accentColor,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              _PrimaryBtn(
+                label: 'CONTINUE →',
+                onTap: () => setState(() => _step = 1),
+              ),
+            ],
+          ),
       ],
     );
   }
 
   // ── STEP 1 : Details ──────────────────────────────────────────
   Widget _buildDetailsStep() {
+    final isMobile = _isMobileLayout(context);
+
     return Form(
       key: _formKey,
       child: Column(
@@ -1015,24 +1224,45 @@ class _BookingPageState extends State<BookingPage> {
           const SizedBox(height: 48),
           _divider(),
           const SizedBox(height: 28),
-
-          Row(
-            children: [
-              _GhostBtn(
-                label: '← BACK',
-                onTap: () => setState(() => _step = 0),
-              ),
-              const Spacer(),
-              _PrimaryBtn(
-                label: 'REVIEW ORDER →',
-                onTap: () {
-                  if (_formKey.currentState!.validate()) {
-                    setState(() => _step = 2);
-                  }
-                },
-              ),
-            ],
-          ),
+          if (isMobile)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PrimaryBtn(
+                  label: 'REVIEW ORDER →',
+                  expand: true,
+                  onTap: () {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() => _step = 2);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                _GhostBtn(
+                  label: '← BACK',
+                  expand: true,
+                  onTap: () => setState(() => _step = 0),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                _GhostBtn(
+                  label: '← BACK',
+                  onTap: () => setState(() => _step = 0),
+                ),
+                const Spacer(),
+                _PrimaryBtn(
+                  label: 'REVIEW ORDER →',
+                  onTap: () {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() => _step = 2);
+                    }
+                  },
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -1040,6 +1270,8 @@ class _BookingPageState extends State<BookingPage> {
 
   // ── STEP 2 : Confirm + Pay ────────────────────────────────────
   Widget _buildConfirmStep(PaymentProvider pp) {
+    final isMobile = _isMobileLayout(context);
+
     final rows = [
       ('Ticket Type', _ticketLabel),
       ('Quantity', '$_quantity'),
@@ -1069,27 +1301,53 @@ class _BookingPageState extends State<BookingPage> {
                         horizontal: 24,
                         vertical: 16,
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            r.$1.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: _muted,
-                              letterSpacing: 2,
+                      child: isMobile
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  r.$1.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: _muted,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  r.$2,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: _white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Text(
+                                  r.$1.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: _muted,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Flexible(
+                                  child: Text(
+                                    r.$2,
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: _white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            r.$2,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: _white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                     const Divider(color: _border, height: 1),
                   ],
@@ -1098,27 +1356,50 @@ class _BookingPageState extends State<BookingPage> {
               // Total
               Padding(
                 padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    const Text(
-                      'TOTAL DUE',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _muted,
-                        letterSpacing: 3,
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'TOTAL DUE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _muted,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '₹$_total',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              color: _accentColor,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          const Text(
+                            'TOTAL DUE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _muted,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '₹$_total',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: _accentColor,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '₹$_total',
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: _accent,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -1130,13 +1411,13 @@ class _BookingPageState extends State<BookingPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _accent.withOpacity(0.04),
-            border: Border.all(color: _accent.withOpacity(0.2)),
+            color: _accentColor.withOpacity(0.04),
+            border: Border.all(color: _accentColor.withOpacity(0.2)),
           ),
-          child: const Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.currency_rupee, color: _accent, size: 14),
+              Icon(Icons.currency_rupee, color: _accentColor, size: 14),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -1196,51 +1477,98 @@ class _BookingPageState extends State<BookingPage> {
         const SizedBox(height: 32),
         _divider(),
         const SizedBox(height: 28),
-
-        Row(
-          children: [
-            _GhostBtn(
-              label: '← BACK',
-              onTap: pp.isLoading ? null : () => setState(() => _step = 1),
-            ),
-            const Spacer(),
-            // ── PAY BUTTON ──────────────────────────────────────
-            pp.isLoading
-                ? Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 16,
-                    ),
-                    color: _accent.withOpacity(0.3),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            color: Colors.black,
-                            strokeWidth: 2,
+        if (isMobile)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              pp.isLoading
+                  ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      color: _accentColor.withOpacity(0.3),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                              strokeWidth: 2,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'PROCESSING...',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 11,
-                            letterSpacing: 2,
+                          SizedBox(width: 12),
+                          Text(
+                            'PROCESSING...',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 11,
+                              letterSpacing: 2,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                  : _PrimaryBtn(
+                      label: 'PAY ₹$_total VIA UPI →',
+                      onTap: _startPayment,
+                      expand: true,
                     ),
-                  )
-                : _PrimaryBtn(
-                    label: 'PAY ₹$_total VIA UPI →',
-                    onTap: _startPayment,
-                  ),
-          ],
-        ),
+              const SizedBox(height: 12),
+              _GhostBtn(
+                label: '← BACK',
+                expand: true,
+                onTap: pp.isLoading ? null : () => setState(() => _step = 1),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              _GhostBtn(
+                label: '← BACK',
+                onTap: pp.isLoading ? null : () => setState(() => _step = 1),
+              ),
+              const Spacer(),
+              pp.isLoading
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 16,
+                      ),
+                      color: _accentColor.withOpacity(0.3),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'PROCESSING...',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 11,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _PrimaryBtn(
+                      label: 'PAY ₹$_total VIA UPI →',
+                      onTap: _startPayment,
+                    ),
+            ],
+          ),
       ],
     );
   }
@@ -1248,20 +1576,44 @@ class _BookingPageState extends State<BookingPage> {
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isCompact = _isTabletLayout(context);
+
     return Scaffold(
       backgroundColor: _bg,
-      body: Row(
-        children: [
-          // LEFT — 38% fixed event summary
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.38,
-            height: double.infinity,
-            child: _leftPanel(),
-          ),
-          // RIGHT — 62% scrollable step content
-          Expanded(child: _rightPanel()),
-        ],
-      ),
+      body: isCompact
+          ? SafeArea(
+              child: Consumer<PaymentProvider>(
+                builder: (context, pp, _) => SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _leftPanel(embedded: true),
+                      Padding(
+                        padding: EdgeInsets.all(
+                          _responsiveInset(
+                            context,
+                            mobile: 20,
+                            tablet: 36,
+                            desktop: 64,
+                          ),
+                        ),
+                        child: _rightPanelContent(pp, embedded: true),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : Row(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.38,
+                  height: double.infinity,
+                  child: _leftPanel(),
+                ),
+                Expanded(child: _rightPanel()),
+              ],
+            ),
     );
   }
 }
@@ -1289,71 +1641,92 @@ class _TicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.siteAccent;
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isCompact = MediaQuery.of(context).size.width < 1100;
+
+    final perkRows = perks
+        .map(
+          (p) => Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 12, height: 1, color: accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  p,
+                  style: const TextStyle(fontSize: 12, color: _muted),
+                ),
+              ),
+            ],
+          ),
+        )
+        .toList();
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(28),
+          padding: EdgeInsets.all(isMobile ? 20 : 28),
           decoration: BoxDecoration(
             color: selected
                 ? (featured
-                      ? const Color(0xFF0D1A00)
-                      : _accent.withOpacity(0.04))
+                      ? accent.withOpacity(0.08)
+                      : accent.withOpacity(0.04))
                 : _card,
             border: Border.all(
-              color: selected ? _accent : _border,
+              color: selected ? accent : _border,
               width: selected ? 1.5 : 1,
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 20,
-                height: 20,
-                margin: const EdgeInsets.only(top: 3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected ? _accent : _border,
-                    width: 1.5,
-                  ),
-                ),
-                child: selected
-                    ? Center(
-                        child: CircleAvatar(
-                          radius: 4,
-                          backgroundColor: _accent,
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
+          child: isMobile
+              ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          label.toUpperCase(),
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            color: _muted,
-                            letterSpacing: 2,
+                        Container(
+                          width: 20,
+                          height: 20,
+                          margin: const EdgeInsets.only(top: 2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected ? accent : _border,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: selected
+                              ? Center(
+                                  child: CircleAvatar(
+                                    radius: 4,
+                                    backgroundColor: accent,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            label.toUpperCase(),
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 10,
+                              color: _muted,
+                              letterSpacing: 2,
+                            ),
                           ),
                         ),
-                        if (featured) ...[
-                          const Spacer(),
+                        if (featured)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 3,
                             ),
-                            color: _accent,
+                            color: accent,
                             child: const Text(
                               'POPULAR',
                               style: TextStyle(
@@ -1364,47 +1737,129 @@ class _TicketCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 18),
                     Text(
                       '₹$price',
-                      style: const TextStyle(
-                        fontSize: 40,
+                      style: TextStyle(
+                        fontSize: isCompact ? 34 : 40,
                         fontWeight: FontWeight.w900,
                         color: _white,
                         height: 1,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 20,
-                      runSpacing: 8,
-                      children: perks
-                          .map(
-                            (p) => Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(width: 12, height: 1, color: _accent),
-                                const SizedBox(width: 8),
-                                Text(
-                                  p,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: _muted,
+                    ...perkRows.map(
+                      (row) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: row,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      margin: const EdgeInsets.only(top: 3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected ? accent : _border,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: selected
+                          ? Center(
+                              child: CircleAvatar(
+                                radius: 4,
+                                backgroundColor: accent,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                label.toUpperCase(),
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 10,
+                                  color: _muted,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              if (featured) ...[
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  color: accent,
+                                  child: const Text(
+                                    'POPULAR',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
                                 ),
                               ],
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '₹$price',
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: _white,
+                              height: 1,
                             ),
-                          )
-                          .toList(),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 20,
+                            runSpacing: 8,
+                            children: perks
+                                .map(
+                                  (p) => Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 1,
+                                        color: accent,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        p,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: _muted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -1454,6 +1909,8 @@ class _BookingField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.siteAccent;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1468,7 +1925,7 @@ class _BookingField extends StatelessWidget {
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           style: const TextStyle(color: _white, fontSize: 15),
-          cursorColor: _accent,
+          cursorColor: accent,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: _muted, fontSize: 14),
@@ -1486,9 +1943,9 @@ class _BookingField extends StatelessWidget {
               borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: _border),
             ),
-            focusedBorder: const OutlineInputBorder(
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: _accent),
+              borderSide: BorderSide(color: accent),
             ),
             errorBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.zero,
@@ -1513,17 +1970,22 @@ class _BookingField extends StatelessWidget {
 class _PrimaryBtn extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
-  const _PrimaryBtn({required this.label, this.onTap});
+  final bool expand;
+  const _PrimaryBtn({required this.label, this.onTap, this.expand = false});
 
   @override
   Widget build(BuildContext context) {
+    final accent = context.siteAccent;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          width: expand ? double.infinity : null,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          color: onTap != null ? _accent : _accent.withOpacity(0.4),
+          color: onTap != null ? accent : accent.withOpacity(0.4),
+          alignment: Alignment.center,
           child: Text(
             label,
             style: const TextStyle(
@@ -1542,7 +2004,8 @@ class _PrimaryBtn extends StatelessWidget {
 class _GhostBtn extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
-  const _GhostBtn({required this.label, this.onTap});
+  final bool expand;
+  const _GhostBtn({required this.label, this.onTap, this.expand = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1551,8 +2014,10 @@ class _GhostBtn extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          width: expand ? double.infinity : null,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(border: Border.all(color: _border)),
+          alignment: Alignment.center,
           child: Text(
             label,
             style: const TextStyle(

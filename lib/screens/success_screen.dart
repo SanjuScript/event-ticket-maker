@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:event_ticket_maker/theme/site_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +14,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 const _bg = Color(0xFF0A0A0A);
 const _surface = Color(0xFF141414);
 const _card = Color(0xFF1C1C1C);
-const _accent = Color(0xFFE8FF47);
-const _accent2 = Color(0xFFFF3CAC);
 const _white = Color(0xFFF5F5F0);
 const _muted = Color(0xFF888888);
 const _border = Color(0xFF2A2A2A);
@@ -48,6 +47,8 @@ class _SuccessScreenState extends State<SuccessScreen>
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
   bool _copied = false;
+
+  Color get _accentColor => context.siteAccent;
 
   @override
   void initState() {
@@ -209,9 +210,9 @@ class _SuccessScreenState extends State<SuccessScreen>
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: _accent.withOpacity(0.4)),
+          border: Border.all(color: _accentColor.withOpacity(0.4)),
         ),
-        child: const Icon(Icons.bolt_rounded, color: _accent, size: 14),
+        child: Icon(Icons.bolt_rounded, color: _accentColor, size: 14),
       ),
       const SizedBox(width: 10),
       Text(
@@ -233,10 +234,10 @@ class _SuccessScreenState extends State<SuccessScreen>
     children: [
       const _CheckRing(),
       const SizedBox(height: 16),
-      const Text(
+      Text(
         "YOU'RE IN",
         style: TextStyle(
-          color: _accent,
+          color: _accentColor,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 4,
@@ -284,8 +285,8 @@ class _SuccessScreenState extends State<SuccessScreen>
                       (widget.settings['eventName'] ?? 'EVENT')
                           .toString()
                           .toUpperCase(),
-                      style: const TextStyle(
-                        color: _accent,
+                      style: TextStyle(
+                        color: _accentColor,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 3,
@@ -303,9 +304,9 @@ class _SuccessScreenState extends State<SuccessScreen>
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.calendar_today_outlined,
-                          color: _accent,
+                          color: _accentColor,
                           size: 11,
                         ),
                         const SizedBox(width: 5),
@@ -314,9 +315,9 @@ class _SuccessScreenState extends State<SuccessScreen>
                           style: const TextStyle(color: _muted, fontSize: 12),
                         ),
                         const SizedBox(width: 14),
-                        const Icon(
+                        Icon(
                           Icons.location_on_outlined,
-                          color: _accent,
+                          color: _accentColor,
                           size: 11,
                         ),
                         const SizedBox(width: 5),
@@ -378,12 +379,12 @@ class _SuccessScreenState extends State<SuccessScreen>
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: _accent.withOpacity(0.35)),
+                      border: Border.all(color: _accentColor.withOpacity(0.35)),
                     ),
                     child: Text(
                       '₹${widget.totalPrice}',
-                      style: const TextStyle(
-                        color: _accent,
+                      style: TextStyle(
+                        color: _accentColor,
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
                       ),
@@ -427,7 +428,10 @@ class _SuccessScreenState extends State<SuccessScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
-                    BoxShadow(color: _accent.withOpacity(0.15), blurRadius: 20),
+                    BoxShadow(
+                      color: _accentColor.withOpacity(0.15),
+                      blurRadius: 20,
+                    ),
                   ],
                 ),
                 child: QrImageView(
@@ -484,8 +488,8 @@ class _SuccessScreenState extends State<SuccessScreen>
                         const SizedBox(width: 8),
                         Text(
                           '${widget.quantity}',
-                          style: const TextStyle(
-                            color: _accent,
+                          style: TextStyle(
+                            color: _accentColor,
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                           ),
@@ -499,7 +503,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            _accent.withOpacity(0.3),
+                            _accentColor.withOpacity(0.3),
                             Colors.transparent,
                           ],
                         ),
@@ -729,46 +733,56 @@ class _BtnState extends State<_Btn> with SingleTickerProviderStateMixin {
           begin: 1.0,
           end: 0.96,
         ).animate(CurvedAnimation(parent: _c, curve: Curves.easeOut)),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 46,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            color: widget.filled
-                ? (_h ? _accent.withOpacity(0.85) : _accent)
-                : Colors.transparent,
-            border: widget.filled
-                ? null
-                : Border.all(color: _h ? _accent.withOpacity(0.5) : _border),
-            boxShadow: widget.filled && _h
-                ? [
-                    BoxShadow(
-                      color: _accent.withOpacity(0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+        child: Builder(
+          builder: (context) {
+            final accent = context.siteAccent;
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 46,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: widget.filled
+                    ? (_h ? accent.withOpacity(0.85) : accent)
+                    : Colors.transparent,
+                border: widget.filled
+                    ? null
+                    : Border.all(color: _h ? accent.withOpacity(0.5) : _border),
+                boxShadow: widget.filled && _h
+                    ? [
+                        BoxShadow(
+                          color: accent.withOpacity(0.2),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    widget.icon,
+                    size: 15,
+                    color: widget.filled
+                        ? Colors.black
+                        : (_h ? accent : _muted),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      color: widget.filled
+                          ? Colors.black
+                          : (_h ? accent : _muted),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.icon,
-                size: 15,
-                color: widget.filled ? Colors.black : (_h ? _accent : _muted),
+                  ),
+                ],
               ),
-              const SizedBox(width: 7),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  color: widget.filled ? Colors.black : (_h ? _accent : _muted),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     ),
